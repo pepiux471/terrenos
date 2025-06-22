@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva Confirmada - Jicuri, Zibatá Queretaro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AXcE7jTvTRzDmqVoxrYlMN54IsW2sIBhU9VVeHvZWsdq3ZnBjvylU20zdJtUMJeodi9Kj0FTihlXg7JE&currency=MXN"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .reserva-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        .reserva-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .reserva-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .reserva-header .icono {
+            font-size: 50px;
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+        .reserva-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .detail-box {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        .detail-box h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .detail-value {
+            font-weight: bold;
+            font-size: 18px;
+            color: #2980b9;
+        }
+        .payment-options {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+        }
+        .payment-option {
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .payment-option label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .payment-option input {
+            margin-right: 10px;
+        }
+        .payment-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #27ae60;
+            margin: 10px 0;
+        }
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        #paypal-button-container {
+            margin-top: 20px;
+            display: none;
+        }
+        #timer {
+            display: none;
+            color: #e74c3c;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+        }
+        @media (max-width: 768px) {
+            .reserva-details {
+                grid-template-columns: 1fr;
+            }
+            .actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="reserva-container">
+        <div class="reserva-header">
+            <div class="icono">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1>¡Reserva Confirmada!</h1>
+            <p>Gracias por tu reserva. Aquí tienes los detalles de tu transacción.</p>
+        </div>
+
+        <div class="reserva-details">
+            <div class="detail-box">
+                <h3>ID de Reserva</h3>
+                <p class="detail-value" id="reserva-id">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Terreno</h3>
+                <p class="detail-value" id="terreno-id">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Nombre</h3>
+                <p class="detail-value" id="cliente-nombre">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Correo Electrónico</h3>
+                <p class="detail-value" id="cliente-email">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Teléfono</h3>
+                <p class="detail-value" id="cliente-telefono">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Referencia de Pago</h3>
+                <p class="detail-value" id="pago-referencia">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Monto del Pago</h3>
+                <p class="detail-value" id="pago-monto">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Tipo de Pago</h3>
+                <p class="detail-value" id="pago-tipo">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Fecha de Reserva</h3>
+                <p class="detail-value" id="reserva-fecha">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Estado</h3>
+                <p class="detail-value" id="reserva-estado">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Saldo Pendiente</h3>
+                <p class="detail-value" id="saldo-pendiente">Cargando...</p>
+            </div>
+            <div class="detail-box">
+                <h3>Próximo Pago</h3>
+                <p class="detail-value" id="proximo-pago">Cargando...</p>
+            </div>
+        </div>
+
+        <div class="payment-options">
+            <h2 style="text-align: center; margin-bottom: 20px;">Opciones de Pago Adicional</h2>
+            
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="paymentOption" value="next_payment" checked>
+                    Realizar próximo pago
+                </label>
+                <div class="payment-amount" id="next-payment-amount">$0.00</div>
+                <p>Pago correspondiente a la siguiente mensualidad.</p>
+            </div>
+            
+            <div class="payment-option">
+                <label>
+                    <input type="radio" name="paymentOption" value="full_payment">
+                    Liquidar saldo completo
+                </label>
+                <div class="payment-amount" id="full-payment-amount">$0.00</div>
+                <p>Pagar el saldo pendiente completo del terreno.</p>
+            </div>
+            
+            <div id="timer">Tiempo restante: <span id="time-left">10:00</span></div>
+            <div id="paypal-button-container"></div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" id="descargar-btn">
+                <i class="fas fa-download"></i> Descargar Comprobante
+            </button>
+            <button class="btn btn-warning" id="pagar-btn">
+                <i class="fas fa-credit-card"></i> Realizar Pago
+            </button>
+            <button class="btn btn-success" id="volver-btn">
+                <i class="fas fa-home"></i> Volver al Inicio
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        let reservationData = {};
+        let timerInterval;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const reservaId = urlParams.get('id');
+            
+            console.log('🔍 Obteniendo reserva con ID:', reservaId);
+            
+            // Obtener los datos de la reserva
+            fetch(`/api/reservation/${reservaId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al obtener la reserva');
+                    }
+                    return response.json();
+                })
+                .then(reserva => {
+                    console.log('✅ Reserva recibida:', reserva);
+                    reservationData = reserva;
+                    
+                    // Almacenar el ID de reserva en localStorage
+                    localStorage.setItem('lastReservationId', reserva.id);
+                    
+                    // Mostrar los datos en la página
+                    document.getElementById('reserva-id').textContent = reserva.id;
+                    document.getElementById('terreno-id').textContent = reserva.terrain_id || 'N/A';
+                    document.getElementById('cliente-nombre').textContent = reserva.customer_name || 'N/A';
+                    document.getElementById('cliente-email').textContent = reserva.customer_email || 'N/A';
+                    document.getElementById('cliente-telefono').textContent = reserva.customer_phone || 'N/A';
+                    document.getElementById('pago-referencia').textContent = reserva.payment_reference || 'N/A';
+                    
+                    // Manejo seguro de valores numéricos
+                    const paymentAmount = reserva.payment_amount || 0;
+                    document.getElementById('pago-monto').textContent = `$${paymentAmount.toFixed(2)}`;
+                    
+                    document.getElementById('pago-tipo').textContent = 
+                        reserva.deposit_type === 'with_deposit' ? 'Con Enganche' : 'Sin Enganche';
+                    
+                    // Formatear fecha
+                    const fechaReserva = reserva.created_at ? new Date(reserva.created_at) : new Date();
+                    document.getElementById('reserva-fecha').textContent = 
+                        fechaReserva.toLocaleDateString('es-MX', {
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    
+                    document.getElementById('reserva-estado').textContent = 
+                        reserva.payment_status === 'completed' ? 'Completado' : 'Pendiente';
+                    
+                    // Calcular saldo pendiente y próximos pagos
+                    calculatePayments(reserva);
+                    
+                    // Configurar botones
+                    document.getElementById('descargar-btn').addEventListener('click', () => {
+                        generarComprobante(reserva);
+                    });
+                    
+                    document.getElementById('pagar-btn').addEventListener('click', () => {
+                        iniciarProcesoPago();
+                    });
+                    
+                    document.getElementById('volver-btn').addEventListener('click', () => {
+                        window.location.href = 'index.html';
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al buscar reserva:', error);
+                    alert('Error al cargar los detalles de la reserva. Por favor intenta más tarde.');
+                });
+            
+            function calculatePayments(reserva) {
+                // Calcular saldo pendiente basado en pagos realizados vs totales
+                const paymentAmount = reserva.payment_amount || 0;
+                const paymentsMade = reserva.payments_made || 0;
+                const paymentsTotal = reserva.payments_total || 135; // Default 135 pagos
+                
+                const pagosRestantes = paymentsTotal - paymentsMade;
+                const saldoPendiente = pagosRestantes * paymentAmount;
+                const proximoPago = paymentAmount;
+                
+                document.getElementById('saldo-pendiente').textContent = `$${saldoPendiente.toFixed(2)}`;
+                document.getElementById('proximo-pago').textContent = `$${proximoPago.toFixed(2)}`;
+                document.getElementById('next-payment-amount').textContent = `$${proximoPago.toFixed(2)}`;
+                document.getElementById('full-payment-amount').textContent = `$${saldoPendiente.toFixed(2)}`;
+            }
+            
+            function iniciarProcesoPago() {
+                const paymentOption = document.querySelector('input[name="paymentOption"]:checked').value;
+                let amount = 0;
+                
+                if (paymentOption === 'next_payment') {
+                    amount = parseFloat(document.getElementById('next-payment-amount').textContent.replace('$', ''));
+                } else if (paymentOption === 'full_payment') {
+                    amount = parseFloat(document.getElementById('full-payment-amount').textContent.replace('$', ''));
+                }
+                
+                if (amount <= 0) {
+                    alert('No hay saldo pendiente por pagar');
+                    return;
+                }
+                
+                // Mostrar botón de PayPal con el monto calculado
+                document.getElementById('pagar-btn').style.display = 'none';
+                document.getElementById('paypal-button-container').style.display = 'block';
+                document.getElementById('timer').style.display = 'block';
+                
+                // Iniciar temporizador de 10 minutos
+                startTimer(600);
+                
+                // Configurar botón de PayPal
+                paypal.Buttons({
+                    createOrder: function(data, actions) {
+                        return actions.order.create({
+                            purchase_units: [{
+                                amount: {
+                                    value: amount.toFixed(2),
+                                    currency_code: 'MXN'
+                                }
+                            }]
+                        });
+                    },
+                    onApprove: function(data, actions) {
+                        return actions.order.capture().then(function(details) {
+                            clearInterval(timerInterval);
+                            document.getElementById('timer').style.display = 'none';
+                            
+                            // Registrar el pago en la base de datos
+                            registrarPago(reservationData.id, amount, details.id, paymentOption)
+                                .then(() => {
+                                    alert('Pago realizado con éxito!');
+                                    window.location.reload(); // Recargar para actualizar datos
+                                })
+                                .catch(error => {
+                                    console.error('Error al registrar pago:', error);
+                                    alert('Pago completado pero hubo un error al registrar. Contacta al soporte.');
+                                });
+                        });
+                    },
+                    onCancel: function(data) {
+                        clearInterval(timerInterval);
+                        resetPaymentUI();
+                        alert('Pago cancelado. Puedes intentarlo nuevamente.');
+                    },
+                    onError: function(err) {
+                        clearInterval(timerInterval);
+                        resetPaymentUI();
+                        console.error('Error en PayPal:', err);
+                        alert('Error en el proceso de pago. Por favor intenta nuevamente.');
+                    }
+                }).render('#paypal-button-container');
+            }
+            
+            function startTimer(duration) {
+                let timer = duration, minutes, seconds;
+                document.getElementById('time-left').textContent = formatTime(timer);
+                
+                timerInterval = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
+                    
+                    minutes = minutes < 10 ? "0" + minutes : minutes;
+                    seconds = seconds < 10 ? "0" + seconds : seconds;
+                    
+                    document.getElementById('time-left').textContent = minutes + ":" + seconds;
+                    
+                    if (--timer < 0) {
+                        clearInterval(timerInterval);
+                        resetPaymentUI();
+                        alert('Tiempo para completar el pago ha expirado. Por favor inicia el proceso nuevamente.');
+                    }
+                }, 1000);
+            }
+            
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+            
+            function resetPaymentUI() {
+                document.getElementById('paypal-button-container').style.display = 'none';
+                document.getElementById('timer').style.display = 'none';
+                document.getElementById('pagar-btn').style.display = 'inline-flex';
+                document.getElementById('paypal-button-container').innerHTML = ''; // Limpiar botones PayPal
+            }
+            
+            async function registrarPago(reservationId, amount, reference, paymentType) {
+                try {
+                    // Primero registrar el pago en la tabla payments
+                    const paymentResponse = await fetch('/api/payments', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            reservation_id: reservationId,
+                            amount: amount,
+                            payment_reference: reference,
+                            payment_method: 'paypal',
+                            status: 'completed'
+                        })
+                    });
+                    
+                    if (!paymentResponse.ok) {
+                        throw new Error('Error al registrar el pago');
+                    }
+                    
+                    // Luego actualizar la reserva (incrementar payments_made)
+                    const updateResponse = await fetch(`/api/reservation/${reservationId}/payment`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            payment_type: paymentType,
+                            amount: amount
+                        })
+                    });
+                    
+                    if (!updateResponse.ok) {
+                        throw new Error('Error al actualizar la reserva');
+                    }
+                    
+                    return await paymentResponse.json();
+                } catch (error) {
+                    console.error('Error en registrarPago:', error);
+                    throw error;
+                }
+            }
+            
+            function generarComprobante(reserva) {
+                try {
+                    const paymentAmount = reserva.payment_amount || 0;
+                    const paymentsMade = reserva.payments_made || 0;
+                    const paymentsTotal = reserva.payments_total || 135;
+                    
+                    const doc = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: [80, 180]
+                    });
+                    
+                    // Encabezado
+                    doc.setFillColor(44, 62, 80);
+                    doc.rect(0, 0, 80, 20, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(12);
+                    doc.text('Zona Azul Chipuja', 40, 10, { align: 'center' });
+                    doc.setFontSize(8);
+                    doc.text('Veracruz, México', 40, 15, { align: 'center' });
+                    
+                    // Título
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(10);
+                    doc.text('Comprobante de Reserva', 40, 25, { align: 'center' });
+                    doc.setDrawColor(26, 188, 156);
+                    doc.setLineWidth(0.3);
+                    doc.line(10, 27, 70, 27);
+                    
+                    // Detalles
+                    doc.setFontSize(8);
+                    let y = 30;
+                    
+                    const basicData = [
+                        ['ID Reserva', reserva.id?.toString() || 'N/A'],
+                        ['Terreno', reserva.terrain_id || 'N/A'],
+                        ['Cliente', reserva.customer_name || 'N/A'],
+                        ['Correo', reserva.customer_email || 'N/A'],
+                        ['Teléfono', reserva.customer_phone || 'N/A'],
+                        ['Fecha', reserva.created_at ? new Date(reserva.created_at).toLocaleDateString('es-MX') : 'N/A']
+                    ];
+                    
+                    basicData.forEach(row => {
+                        doc.setLineWidth(0.1);
+                        doc.rect(10, y, 30, 6);
+                        doc.rect(40, y, 30, 6);
+                        doc.text(row[0], 12, y + 4);
+                        doc.text(row[1], 42, y + 4);
+                        y += 6;
+                    });
+                    
+                    y += 2;
+                    
+                    const financialData = [
+                        ['Tipo', reserva.deposit_type === 'with_deposit' ? 'Con Enganche' : 'Sin Enganche'],
+                        ['Monto Pago', `$${paymentAmount.toFixed(2)}`],
+                        ['Pagos Totales', paymentsTotal.toString()],
+                        ['Pagos Realizados', paymentsMade.toString()],
+                        ['Pagos Pendientes', (paymentsTotal - paymentsMade).toString()],
+                        ['Referencia', reserva.payment_reference || 'N/A']
+                    ];
+                    
+                    financialData.forEach(row => {
+                        doc.setLineWidth(0.1);
+                        doc.rect(10, y, 30, 6);
+                        doc.rect(40, y, 30, 6);
+                        doc.text(row[0], 12, y + 4);
+                        doc.text(row[1], 42, y + 4);
+                        y += 6;
+                    });
+                    
+                    // Pie de página
+                    doc.setDrawColor(44, 62, 80);
+                    doc.line(10, y + 5, 70, y + 5);
+                    doc.setTextColor(127, 140, 141);
+                    doc.setFontSize(6);
+                    doc.text('Zona Azul de Chipuja Veracruz', 40, y + 10, { align: 'center' });
+                    doc.text('Tel: (55) 1234-5678 | contacto@zonaazul.com', 40, y + 14, { align: 'center' });
+                    doc.text('Gracias por tu reserva!', 40, y + 18, { align: 'center' });
+                    
+                    doc.save(`Comprobante_Reserva_${reserva.id || 'temp'}.pdf`);
+                } catch (error) {
+                    console.error('Error al generar comprobante:', error);
+                    alert('Error al generar el comprobante. Por favor intenta nuevamente.');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

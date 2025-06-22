@@ -1,0 +1,357 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f9;
+  color: #333;
+}
+
+.header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo i {
+  font-size: 2rem;
+}
+
+.title h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.title p {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.nav-links .logout-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-links .logout-btn:hover {
+  background-color: #c0392b;
+}
+
+.main-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.dashboard {
+  margin-bottom: 2rem;
+}
+
+.dashboard h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.stat-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.stat-card p {
+  font-size: 2rem;
+  margin: 0;
+  color: #3498db;
+}
+
+.terrain-management {
+  margin-bottom: 2rem;
+}
+
+.terrain-management h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.info-message {
+  color: #7f8c8d;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.terrain-form {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: grid;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-group input:disabled,
+.form-group select:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.terrain-form button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.terrain-form button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.terrain-form button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+#cancelEdit {
+  background-color: #e74c3c;
+}
+
+#cancelEdit:hover {
+  background-color: #c0392b;
+}
+
+.terrain-list, .reservation-list {
+  margin-bottom: 2rem;
+}
+
+.terrain-list h2, .reservation-list h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.terrain-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.terrain-table th,
+.terrain-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.terrain-table th {
+  background-color: #2c3e50;
+  color: white;
+}
+
+.terrain-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.reservation-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reservation-table th,
+.reservation_table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0;
+}
+
+.reservation-table th {
+  background-color: #1abc9c;
+  color: white;
+  cursor: pointer;
+}
+
+.reservation-table th:hover {
+  background-color: #16a085;
+}
+
+.reservation-table tr {
+  background-color: #e8f8f5;
+  transform: scale(1.01);
+}
+
+.status-badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.status-pending {
+  background-color: #f39c12;
+}
+
+.status-confirmed {
+  background-color: #2ecc71;
+}
+
+.status-cancelled {
+  background-color: #e74c3c;
+}
+
+.table-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: center;
+}
+
+.search-controls {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  width: 300px;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-controls:focus {
+  outline: none;
+  border-color: #1abc9c;
+  box-shadow: 0 0 8px rgba(26,188,156,0.3);
+}
+
+.status-filter {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.edit-btn, .delete-btn, .view-btn, .cancel-reservation-btn, .pdf-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.edit-btn, .view-btn, .pdf-btn {
+  background-color: #3498db;
+  color: white;
+  margin-right: 0.5rem;
+}
+
+.edit-btn:hover, .view-btn:hover, .pdf-btn:hover {
+  background-color: #2980b9;
+}
+
+.delete-btn, .cancel-reservation-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-btn:hover, .cancel-reservation-btn:hover {
+  background-color: #c0392b;
+}
+
+.footer {
+  background-color: #2c3e50;
+  color: white;
+  text-align: center;
+  padding: 1rem;
+  margin-top: 2rem;
+}
+
+.footer-content p {
+  margin: 0.5rem 0;
+}
+
+@media (max-width: 768px) {
+  .stats-container {
+    grid-template-columns: 1fr;
+  }
+
+  .terrain-form {
+    grid-template-columns: 1fr;
+  }
+
+  .terrain-table th, .terrain-table td,
+  .reservation-table th, .reservation-table td {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+  }
+
+  .table-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+}

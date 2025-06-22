@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - Terrenos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-container">
+      <div class="logo">
+        <i class="fas fa-home"></i>
+        <div class="title">
+          <h1>Zona Azul de Chipuja Veracruz- Administración</h1>
+          <p>Panel de Administración</p>
+        </div>
+      </div>
+      <div class="nav-links">
+          <button class="logout-btn" onclick="window.location.href='adminlogin.html'">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+          
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="dashboard">
+      <h2>Resumen</h2>
+      <div class="stats-container">
+        <div class="stat-card">
+          <h3>Terrenos Disponibles</h3>
+          <p id="availableTerrains">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Terrenos Reservados</h3>
+          <p id="reservedTerrains">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Terrenos Vendidos</h3>
+          <p id="soldTerrains">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Reservas Pendientes</h3>
+          <p id="pendingReservations">0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="terrain-management">
+      <h2>Gestión de Terrenos</h2>
+      <p class="info-message">Edite o elimine terrenos disponibles.</p>
+      <form class="terrain-form" id="terrainForm">
+        <div class="form-group">
+          <label for="terrainId">ID del Terreno</label>
+          <input type="text" id="terrainId" disabled>
+        </div>
+        <div class="form-group">
+          <label for="size_m2">Tamaño (m²)</label>
+          <input type="number" id="size_m2" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="price">Precio</label>
+          <input type="number" id="price" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="status">Estado</label>
+          <select id="status" required>
+            <option value="available">Disponible</option>
+            <option value="reserved">Reservado</option>
+            <option value="sold">Vendido</option>
+          </select>
+        </div>
+        <button type="submit">Guardar</button>
+        <button type="button" id="cancelEdit" style="display: none;">Cancelar</button>
+      </form>
+    </div>
+
+    <div class="terrain-list">
+      <h2>Lista de Terrenos</h2>
+      <table class="terrain-table" id="terrainsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tamaño (m²)</th>
+            <th>Precio</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="reservation-list">
+      <h2>Lista de Reservas</h2>
+      <div class="table-controls">
+        <input type="text" class="search-input" id="searchReservations" placeholder="Buscar por nombre o correo...">
+        <select class="status-filter" id="statusFilter">
+          <option value="">Todos los estados</option>
+          <option value="pending">Pendiente</option>
+          <option value="confirmed">Confirmada</option>
+          <option value="cancelled">Cancelada</option>
+        </select>
+      </div>
+      <table class="reservation-table" id="reservationsTable">
+        <thead>
+          <tr>
+            <th>ID Reserva</th>
+            <th>Terreno</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Monto Pagado</th>
+            <th>Tipo de Enganche</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>© 2025 Terrenos México. Todos los derechos reservados.</p>
+      <p>Desarrollado por el equipo de TI</p>
+    </div>
+  </footer>
+
+  <!-- Librería jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const { jsPDF } = window.jspdf;
+
+    async function loadStats() {
+      try {
+        const terrainResponse = await fetch('/api/terrains');
+        const terrains = await terrainResponse.json();
+        const reservationResponse = await fetch('/api/reservations');
+        const reservations = await reservationResponse.json();
+
+        document.getElementById('availableTerrains').textContent = terrains.filter(t => t.status === 'available').length;
+        document.getElementById('reservedTerrains').textContent = terrains.filter(t => t.status === 'reserved').length;
+        document.getElementById('soldTerrains').textContent = terrains.filter(t => t.status === 'sold').length;
+        document.getElementById('pendingReservations').textContent = reservations.filter(r => r.payment_status === 'pending').length;
+      } catch (error) {
+        console.error('Error al cargar estadísticas:', error);
+        alert('Error al cargar estadísticas');
+      }
+    }
+
+    async function loadTerrains() {
+      try {
+        const response = await fetch('/api/terrains');
+        const terrains = await response.json();
+        console.log('Terrenos recibidos:', terrains);
+        const soldTerrains = terrains.filter(t => t.status === 'sold').map(t => t.id);
+        console.log('Terrenos vendidos:', soldTerrains);
+        const tbody = document.querySelector('#terrainsTable tbody');
+        tbody.innerHTML = '';
+        terrains.forEach(terrain => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${terrain.id}</td>
+            <td>${terrain.size_m2}</td>
+            <td>$${terrain.price.toFixed(2)}</td>
+            <td>${terrain.status === 'available' ? 'Disponible' : terrain.status === 'reserved' ? 'Reservado' : 'Vendido'}</td>
+            <td>
+              <button class="edit-btn" onclick="editTerrain('${terrain.id}')">
+                <i class="fas fa-edit"></i> Editar
+              </button>
+              <button class="delete-btn" onclick="deleteTerrain('${terrain.id}')">
+                <i class="fas fa-trash"></i> Eliminar
+              </button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error al cargar terrenos:', error);
+        alert('Error al cargar terrenos');
+      }
+    }
+
+    async function editTerrain(id) {
+      try {
+        const response = await fetch(`/api/terrain/${id}`);
+        const terrain = await response.json();
+        document.getElementById('terrainId').value = terrain.id;
+        document.getElementById('size_m2').value = terrain.size_m2;
+        document.getElementById('price').value = terrain.price;
+        document.getElementById('status').value = terrain.status;
+        document.getElementById('cancelEdit').style.display = 'inline-block';
+      } catch (error) {
+        console.error('Error al cargar terreno:', error);
+        alert('Error al cargar terreno');
+      }
+    }
+
+    document.getElementById('terrainForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('terrainId').value;
+      const size_m2 = parseFloat(document.getElementById('size_m2').value);
+      const price = parseFloat(document.getElementById('price').value);
+      const status = document.getElementById('status').value;
+
+      try {
+        const response = await fetch(`/api/terrain/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ size_m2, price, status })
+        });
+        const result = await response.json();
+        if (result.success) {
+          alert('Terreno actualizado');
+          loadTerrains();
+          loadStats();
+          resetTerrainForm();
+        } else {
+          alert('Error al actualizar terreno: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error al actualizar terreno:', error);
+        alert('Error al actualizar terreno');
+      }
+    });
+
+    document.getElementById('cancelEdit').addEventListener('click', resetTerrainForm);
+
+    function resetTerrainForm() {
+      document.getElementById('terrainForm').reset();
+      document.getElementById('terrainId').value = '';
+      document.getElementById('cancelEdit').style.display = 'none';
+    }
+
+    async function deleteTerrain(id) {
+      if (confirm('¿Seguro que desea eliminar este terreno?')) {
+        try {
+          const response = await fetch(`/api/terrain/${id}`, {
+            method: 'DELETE'
+          });
+          const result = await response.json();
+          if (result.success) {
+            alert('Terreno eliminado');
+            loadTerrains();
+            loadStats();
+          } else {
+            alert('Error al eliminar terreno: ' + result.error);
+          }
+        } catch (error) {
+          console.error('Error al eliminar terreno:', error);
+          alert('Error al eliminar terreno');
+        }
+      }
+    }
+
+    async function loadReservations() {
+      try {
+        const response = await fetch('/api/reservations');
+        const reservations = await response.json();
+        console.log('Reservas recibidas:', reservations);
+        const tbody = document.querySelector('#reservationsTable tbody');
+        tbody.innerHTML = '';
+        reservations.forEach(reservation => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${reservation.id}</td>
+            <td>${reservation.terrain_id}</td>
+            <td>${reservation.customer_name}</td>
+            <td>${reservation.customer_email}</td>
+            <td>${reservation.customer_phone}</td>
+            <td>$${reservation.payment_amount.toFixed(2)}</td>
+            <td>${reservation.deposit_type === 'with_deposit' ? 'Con Enganche' : 'Sin Enganche'}</td>
+            <td>${new Date(reservation.created_at).toLocaleDateString('es-MX')}</td>
+            <td>
+              <span class="status-badge status-${reservation.payment_status}">
+                ${reservation.payment_status === 'pending' ? 'Pendiente' : 
+                  reservation.payment_status === 'confirmed' ? 'Confirmada' : 'Cancelada'}
+              </span>
+            </td>
+            <td>
+              <button class="view-btn" onclick="viewReservation(${reservation.id})">
+                <i class="fas fa-eye"></i> Ver
+              </button>
+              <button class="cancel-reservation-btn" onclick="cancelReservation(${reservation.id})">
+                <i class="fas fa-times"></i> Cancelar
+              </button>
+              <button class="pdf-btn" onclick="generateReservationPDF(${reservation.id})">
+                <i class="fas fa-file-pdf"></i> PDF
+              </button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        // Filtros
+        document.getElementById('searchReservations').addEventListener('input', filterReservations);
+        document.getElementById('statusFilter').addEventListener('change', filterReservations);
+      } catch (error) {
+        console.error('Error al cargar reservas:', error);
+        alert('Error al cargar reservas');
+      }
+    }
+
+    function filterReservations() {
+      const search = document.getElementById('searchReservations').value.toLowerCase();
+      const status = document.getElementById('statusFilter').value;
+      const rows = document.querySelectorAll('#reservationsTable tbody tr');
+
+      rows.forEach(row => {
+        const name = row.cells[2].textContent.toLowerCase();
+        const email = row.cells[3].textContent.toLowerCase();
+        const rowStatus = row.cells[8].querySelector('.status-badge').classList.contains(`status-${status}`);
+        const matchesSearch = name.includes(search) || email.includes(search);
+        const matchesStatus = !status || rowStatus;
+
+        row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+      });
+    }
+
+    async function viewReservation(id) {
+      try {
+        const response = await fetch(`/api/reservation/${id}`);
+        const reservation = await response.json();
+        alert(`
+          ID Reserva: ${reservation.id}
+          Terreno: ${reservation.terrain_id}
+          Nombre: ${reservation.customer_name}
+          Correo: ${reservation.customer_email}
+          Teléfono: ${reservation.customer_phone}
+          Monto Pagado: $${reservation.payment_amount.toFixed(2)}
+          Tipo de Enganche: ${reservation.deposit_type === 'with_deposit' ? 'Con Enganche' : 'Sin Enganche'}
+          Referencia de Pago: ${reservation.payment_reference || 'N/A'}
+          Estado: ${reservation.payment_status === 'pending' ? 'Pendiente' : 
+                   reservation.payment_status === 'confirmed' ? 'Confirmada' : 'Cancelada'}
+          Fecha de Reserva: ${new Date(reservation.created_at).toLocaleString('es-MX')}
+        `);
+      } catch (error) {
+        console.error('Error al cargar reserva:', error);
+        alert('Error al cargar reserva');
+      }
+    }
+
+    async function cancelReservation(id) {
+      if (confirm('¿Seguro que desea cancelar esta reserva?')) {
+        try {
+          const response = await fetch(`/api/reservation/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'cancelled' })
+          });
+          const result = await response.json();
+          if (result.success) {
+            alert('Reserva cancelada');
+            loadReservations();
+            loadStats();
+            loadTerrains();
+          } else {
+            alert('Error al cancelar reserva: ' + result.error);
+          }
+        } catch (error) {
+          console.error('Error al cancelar reserva:', error);
+          alert('Error al cancelar reserva');
+        }
+      }
+    }
+
+    async function generateReservationPDF(id) {
+      console.log('Generando PDF para reserva ID:', id);
+      try {
+        const response = await fetch(`/api/reservation/${id}`);
+        const reservation = await response.json();
+        console.log('Datos de la reserva:', reservation);
+
+        const doc = new jsPDF();
+
+        // Encabezado
+        doc.setFillColor(44, 62, 80); // #2c3e50
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.text('Terrenos México', 20, 15);
+        doc.setFontSize(12);
+        doc.text('Av. Principal 123, Ciudad de México', 20, 25);
+        doc.text('Tel: (55) 1234-5678 | Email: contacto@terrenosmexico.com', 20, 35);
+        
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(16);
+        doc.text('Precontrato de Reserva de Terreno', 105, 50, { align: 'center' });
+        doc.setDrawColor(26, 188, 156); // #1abc9c
+        doc.setLineWidth(0.5);
+        doc.line(20, 55, 190, 55);
+
+        // Detalles de la reserva (tabla)
+        doc.setFontSize(12);
+        doc.text('Detalles de la Reserva', 20, 70);
+        const headers = ['Campo', 'Valor'];
+        const data = [
+          ['ID de Reserva', reservation.id.toString()],
+          ['Terreno', reservation.terrain_id],
+          ['Cliente', reservation.customer_name],
+          ['Correo', reservation.customer_email],
+          ['Teléfono', reservation.customer_phone],
+          ['Monto Pagado', `$${reservation.payment_amount.toFixed(2)}`],
+          ['Tipo de Enganche', reservation.deposit_type === 'with_deposit' ? 'Con Enganche' : 'Sin Enganche'],
+          ['Referencia de Pago', reservation.payment_reference || 'N/A'],
+          ['Estado', reservation.payment_status === 'pending' ? 'Pendiente' : 
+                     reservation.payment_status === 'confirmed' ? 'Confirmada' : 'Cancelada'],
+          ['Fecha de Reserva', new Date(reservation.created_at).toLocaleString('es-MX')]
+        ];
+        
+        // Dibujar tabla
+        let y = 80;
+        doc.setFillColor(230, 230, 230); // Fondo gris claro
+        doc.rect(20, y, 170, 10, 'F');
+        doc.setTextColor(0, 0, 0);
+        doc.text(headers[0], 25, y + 7);
+        doc.text(headers[1], 105, y + 7);
+        y += 10;
+        
+        data.forEach(row => {
+          doc.setLineWidth(0.1);
+          doc.rect(20, y, 80, 10); // Columna Campo
+          doc.rect(100, y, 90, 10); // Columna Valor
+          doc.text(row[0], 25, y + 7);
+          doc.text(row[1], 105, y + 7);
+          y += 10;
+        });
+
+        // Cláusulas legales
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text('Términos y Condiciones', 20, y + 20);
+        doc.setFontSize(10);
+        const terms = [
+          '1. Este precontrato confirma la reserva del terreno especificado por un período de 30 días.',
+          '2. El cliente debe realizar el pago inicial dentro de los 15 días hábiles siguientes.',
+          '3. Para formalizar la compra, el cliente debe firmar el contrato definitivo ante notario.',
+          '4. La reserva será cancelada si no se cumple con los plazos establecidos.',
+          '5. Para más información, contacte a nuestro equipo de ventas.'
+        ];
+        terms.forEach((term, index) => {
+          doc.text(term, 20, y + 30 + (index * 10));
+        });
+
+        // Pie de página
+        doc.setDrawColor(44, 62, 80);
+        doc.line(20, 270, 190, 270);
+        doc.setTextColor(127, 140, 141); // #7f8c8d
+        doc.setFontSize(10);
+        doc.text(`Fecha de Emisión: ${new Date().toLocaleString('es-MX')}`, 20, 280);
+        doc.text('Terrenos México - Av. Principal 123, Ciudad de México', 20, 290);
+        doc.text('Este documento es un precontrato y no constituye un contrato final.', 105, 290, { align: 'center' });
+
+        // Descargar
+        doc.save(`Precontrato_Reserva_${reservation.id}.pdf`);
+      } catch (error) {
+        console.error('Error al generar PDF:', error);
+        alert('Error al generar el PDF. Por favor, revisa la consola para más detalles.');
+      }
+    }
+
+    function logout() {
+      alert('Cerrando sesión...');
+      // Implementar lógica de logout si es necesario
+    }
+
+    // Cargar datos al iniciar
+    loadStats();
+    loadTerrains();
+    loadReservations();
+  </script>
+</body>
+</html>
